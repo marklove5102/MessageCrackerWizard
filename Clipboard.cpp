@@ -75,7 +75,7 @@ void CopyMacroToCB(HWND hwnd)
 				auto lineBuf = std::make_unique<wchar_t[]>(lineLength + 1);
 
 				memset(lineBuf.get(), 0, (lineLength + 1) * sizeof(WCHAR));
-				*((WORD*) lineBuf.get()) = (lineLength + 1) * sizeof(WCHAR);
+				*((WORD*) lineBuf.get()) = (WORD)(lineLength + 1);
 
 				SendDlgItemMessage(hwnd, IDC_HANDLEMSG, EM_GETLINE, i, (LPARAM) lineBuf.get());
 
@@ -134,13 +134,29 @@ void CopyMacroToCB(HWND hwnd)
 		wchar_t* pGlobalStr = (wchar_t*) GlobalLock(hGlobal);
 		if (pGlobalStr)
 		{
-			StringCchCopy(pGlobalStr, clipText.length() + sizeof(wchar_t), clipText.c_str());
+			StringCchCopy(pGlobalStr, clipText.length() + 1, clipText.c_str());
 			GlobalUnlock(hGlobal);
 
-			OpenClipboard(hwnd);
-			EmptyClipboard();
-			SetClipboardData(CF_UNICODETEXT, hGlobal);
-			CloseClipboard();
+			if (OpenClipboard(hwnd))
+			{
+				EmptyClipboard();
+				if (SetClipboardData(CF_UNICODETEXT, hGlobal) == NULL)
+				{
+					GlobalFree(hGlobal);
+					MessageBox(NULL, L"Cannot set clipboard data", L"Error", MB_ICONERROR);
+				}
+				CloseClipboard();
+			}
+			else
+			{
+				GlobalFree(hGlobal);
+				MessageBox(NULL, L"Cannot open clipboard", L"Error", MB_ICONERROR);
+			}
+		}
+		else
+		{
+			GlobalFree(hGlobal);
+			MessageBox(NULL, L"Cannot lock memory for clipboard text", L"Error", MB_ICONERROR);
 		}
 	}
 	else
@@ -201,19 +217,29 @@ void CopyFuncToCB(HWND hwnd)
 		wchar_t* pGlobalStr = (wchar_t*) GlobalLock(hGlobal);
 		if (pGlobalStr)
 		{
-			StringCchCopy(pGlobalStr, clipText.length() + sizeof(wchar_t), clipText.c_str());
+			StringCchCopy(pGlobalStr, clipText.length() + 1, clipText.c_str());
 			GlobalUnlock(hGlobal);
 
 			if (OpenClipboard(hwnd))
 			{
 				EmptyClipboard();
-				SetClipboardData(CF_UNICODETEXT, hGlobal);
+				if (SetClipboardData(CF_UNICODETEXT, hGlobal) == NULL)
+				{
+					GlobalFree(hGlobal);
+					MessageBox(NULL, L"Cannot set clipboard data", L"Error", MB_ICONERROR);
+				}
 				CloseClipboard();
 			}
 			else
 			{
+				GlobalFree(hGlobal);
 				MessageBox(NULL, L"Cannot open clipboard", L"Error", MB_ICONERROR);
 			}
+		}
+		else
+		{
+			GlobalFree(hGlobal);
+			MessageBox(NULL, L"Cannot lock memory for clipboard text", L"Error", MB_ICONERROR);
 		}
 	}
 	else

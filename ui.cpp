@@ -146,7 +146,10 @@ void SetupControls(HWND hwnd)
         SetWindowLong(hwnd, GWL_EXSTYLE, GetWindowLong(hwnd, GWL_EXSTYLE) | WS_EX_LAYERED);
 
         PSLWA pSetLayeredWndAttr = (PSLWA)GetProcAddress(hUser32, "SetLayeredWindowAttributes");
-        pSetLayeredWndAttr(hwnd, 0, g_mcwConfig.windowAlpha, LWA_ALPHA);
+        if (pSetLayeredWndAttr)
+        {
+            pSetLayeredWndAttr(hwnd, 0, g_mcwConfig.windowAlpha, LWA_ALPHA);
+        }
         FreeLibrary(hUser32);
     }
 

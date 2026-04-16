@@ -36,20 +36,34 @@ void LoadConfig(MCWCONFIG& mcw)
         L"Software\\MessageCrackerWizard", NULL, NULL, NULL, KEY_READ, NULL, &hk, NULL) == ERROR_SUCCESS)
     {
         mcw.rcWindow = { -1,-1,-1,-1 };
+        mcw.bDarkMode = false;
+        mcw.bStayOnTop = false;
+        mcw.windowAlpha = ALPHA_SOLID;
 
-        DWORD cbData = 0;
-        DWORD dwDarkMode = 0, dwStayTop = -1, dwWindowAlpha = 255;
-        RegQueryValueEx(hk, L"wRect.Top", NULL, NULL, (BYTE*)&mcw.rcWindow.top, &cbData);
-        RegQueryValueEx(hk, L"wRect.Left", NULL, NULL, (BYTE*)&mcw.rcWindow.left, &cbData);
-        RegQueryValueEx(hk, L"wRect.Right", NULL, NULL, (BYTE*)&mcw.rcWindow.right, &cbData);
-        RegQueryValueEx(hk, L"wRect.Bottom", NULL, NULL, (BYTE*)&mcw.rcWindow.bottom, &cbData);
-        RegQueryValueEx(hk, L"DarkMode", NULL, NULL, (BYTE*)&dwDarkMode, &cbData);
-        RegQueryValueEx(hk, L"StayOnTop", NULL, NULL, (BYTE*)&dwStayTop, &cbData);
-        RegQueryValueEx(hk, L"WindowAlpha", NULL, NULL, (BYTE*)&dwWindowAlpha, &cbData);
+        auto ReadDword = [hk](const wchar_t* valueName, DWORD& outValue) -> bool
+        {
+            DWORD cbData = sizeof(DWORD);
+            DWORD valueType = 0;
+            return RegQueryValueEx(hk, valueName, NULL, &valueType, (BYTE*)&outValue, &cbData) == ERROR_SUCCESS &&
+                valueType == REG_DWORD &&
+                cbData == sizeof(DWORD);
+        };
 
-        mcw.bDarkMode = dwDarkMode == 0 ? false : true;
-        mcw.bStayOnTop = dwStayTop == 0 ? false : true;
-        mcw.windowAlpha = dwWindowAlpha;
+        DWORD dwValue = 0;
+        if (ReadDword(L"wRect.Top", dwValue))
+            mcw.rcWindow.top = (LONG)dwValue;
+        if (ReadDword(L"wRect.Left", dwValue))
+            mcw.rcWindow.left = (LONG)dwValue;
+        if (ReadDword(L"wRect.Right", dwValue))
+            mcw.rcWindow.right = (LONG)dwValue;
+        if (ReadDword(L"wRect.Bottom", dwValue))
+            mcw.rcWindow.bottom = (LONG)dwValue;
+        if (ReadDword(L"DarkMode", dwValue))
+            mcw.bDarkMode = dwValue != 0;
+        if (ReadDword(L"StayOnTop", dwValue))
+            mcw.bStayOnTop = dwValue != 0;
+        if (ReadDword(L"WindowAlpha", dwValue))
+            mcw.windowAlpha = (int)dwValue;
 
         RegCloseKey(hk);
     }

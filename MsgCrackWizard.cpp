@@ -31,7 +31,7 @@ SOFTWARE.
 
 	(c) 2003, 2017, 2018, 2024 Hernan Di Pietro
 
-	Release 2.6
+	Release 2.6.1
 
 	version history
 	1.0 - first release
@@ -61,6 +61,10 @@ SOFTWARE.
           * removed 'Hide Target Code' option
     2.6   + added Search in listbox feature, clear selections and enhancements (thanks @HHsomeHand)
           - fix MFC-dependent afxres.h in resource file
+    2.6.1 - fixed clipboard copy buffer sizing and clipboard error handling
+          - fixed registry configuration loading for saved window state and UI settings
+          - guarded layered window API calls when SetLayeredWindowAttributes is unavailable
+          - released all loaded bitmap resources on shutdown
 
 *******************************************************************************/
 
@@ -480,7 +484,10 @@ void Cls_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 			if (hUser32)
 			{
 				pSetLayeredWndAttr = (PSLWA) GetProcAddress(hUser32, "SetLayeredWindowAttributes");
-				pSetLayeredWndAttr(hwnd, 0, bAlpha, LWA_ALPHA);
+				if (pSetLayeredWndAttr)
+				{
+					pSetLayeredWndAttr(hwnd, 0, bAlpha, LWA_ALPHA);
+				}
 				FreeLibrary(hUser32);
 			}
 
@@ -639,7 +646,20 @@ void Cls_OnMeasureItem(HWND hwnd, MEASUREITEMSTRUCT * lpMeasureItem)
 void Cls_OnClose(HWND hwnd)
 {
 	// destroy allocated resources
-	DeleteObject((HBITMAP) hbmpKeyboard);
+	DeleteObject(hbmpKeyboard);
+	DeleteObject(hbmpMouse);
+	DeleteObject(hbmpClipboard);
+	DeleteObject(hbmpMDI);
+	DeleteObject(hbmpNonClient);
+	DeleteObject(hbmpGeneral);
+	DeleteObject(hbmpWindow);
+	DeleteObject(hbmpKeyboard_d);
+	DeleteObject(hbmpMouse_d);
+	DeleteObject(hbmpClipboard_d);
+	DeleteObject(hbmpMDI_d);
+	DeleteObject(hbmpNonClient_d);
+	DeleteObject(hbmpGeneral_d);
+	DeleteObject(hbmpWindow_d);
 	DestroyWindow(hwnd);
 }
 

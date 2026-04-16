@@ -50,3 +50,8 @@ Suggestions are welcome.
   * Added Search in listbox feature, clear selections and enhancements (thanks @HHsomeHand)
   * fix MFC-dependent afxres.h in resource file
   * Solved Misc build issues for latest  VC environment.
+* 2.6.1
+  * Fixed clipboard copy buffer sizing and clipboard error handling.
+  * Fixed registry configuration loading for saved window state and UI settings.
+  * Guarded layered window API calls when `SetLayeredWindowAttributes` is unavailable.
+  * Released all loaded bitmap resources on shutdown.
